@@ -39,6 +39,13 @@ func capture() {
 	fmt.Println("Image saved")
 }
 
+func keepCapturing() {
+	for {
+		capture()
+		time.Sleep(1000)
+	}
+}
+
 func serveCapture(w http.ResponseWriter, req *http.Request) {
 	buf, err := os.ReadFile(currentImagePath)
 	if err != nil {
@@ -50,7 +57,7 @@ func serveCapture(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 
-	capture()
+	go keepCapturing()
 
 	http.HandleFunc("/capture", serveCapture)
 
