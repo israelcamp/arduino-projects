@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+var currentImagePath string
+
 func getNowFormated() string {
 	now := time.Now()
 	return fmt.Sprintf("%d-%d-%d_%d-%d-%d", now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
@@ -23,7 +25,8 @@ func capture() {
 	fmt.Println("Status", resp.Status)
 	nowString := getNowFormated()
 
-	out, err := os.Create(fmt.Sprintf("images/%s.png", nowString))
+	currentImagePath = fmt.Sprintf("images/%s.png", nowString)
+	out, err := os.Create(currentImagePath)
 	if err != nil {
 		panic(err)
 	}
@@ -36,15 +39,20 @@ func capture() {
 	fmt.Println("Image saved")
 }
 
-func hello(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "hello\n")
+func serveCapture(w http.ResponseWriter, req *http.Request) {
+	buf, err := os.ReadFile(currentImagePath)
+	if err != nil {
+		http.Error(w, "ERROR: NOT FOUND", 404)
+	}
+	w.Header().Set("Content-Type", "image/png")
+	w.Write(buf)
 }
 
 func main() {
 
 	capture()
 
-	http.HandleFunc("/hello", hello)
+	http.HandleFunc("/capture", serveCapture)
 
 	http.ListenAndServe(":8090", nil)
 }
