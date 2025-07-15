@@ -23,7 +23,7 @@ func capture() {
 	fmt.Println("Status", resp.Status)
 	nowString := getNowFormated()
 
-	out, err := os.Create(fmt.Sprintf("%s.png", nowString))
+	out, err := os.Create(fmt.Sprintf("images/%s.png", nowString))
 	if err != nil {
 		panic(err)
 	}
