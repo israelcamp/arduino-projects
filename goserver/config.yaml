@@ -1,0 +1,5 @@
+esp32cam:
+  url: http://192.168.0.107
+  captureEndpoint: capture
+fileSystem:
+  imagesDir: images
