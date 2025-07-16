@@ -1,38 +1,15 @@
 package main
 
 import (
+	"archome/server/config"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"time"
-
-	"gopkg.in/yaml.v3"
 )
 
-type Config struct {
-	Esp32Cam struct {
-		URL             string `yaml:"url"`
-		CaptureEndpoint string `yaml:"capture"`
-	} `yaml:"esp32cam"`
-	FileSystem struct {
-		ImagesDir string `yaml:"imagesDir"`
-	} `yaml:"fileSystem"`
-}
-
 var currentImagePath string
-
-func readConfig() Config {
-	data, err := os.ReadFile("config.yaml")
-	if err != nil {
-		panic(err)
-	}
-	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		panic(err)
-	}
-	return cfg
-}
 
 func getNowFormated() string {
 	now := time.Now()
@@ -63,12 +40,13 @@ func capture(endpoint string, imagesDir string) {
 	fmt.Println("Image saved")
 }
 
-func keepCapturing(cfg Config) {
+func keepCapturing(cfg config.Config) {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
+	endpoint := fmt.Sprintf("%s%s", cfg.Esp32Cam.URL, cfg.Esp32Cam.CaptureEndpoint)
 	for range ticker.C {
-		capture(fmt.Sprintf("%s%s", cfg.Esp32Cam.URL, cfg.Esp32Cam.CaptureEndpoint), cfg.FileSystem.ImagesDir)
+		capture(endpoint, cfg.FileSystem.ImagesDir)
 	}
 }
 
@@ -83,9 +61,9 @@ func serveCapture(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 
-	config := readConfig()
+	cfg := config.ReadConfig()
 
-	go keepCapturing(config)
+	go keepCapturing(cfg)
 
 	http.HandleFunc("/capture", serveCapture)
 
