@@ -42,7 +42,7 @@ func capture() {
 func keepCapturing() {
 	for {
 		capture()
-		time.Sleep(1000)
+		time.Sleep(1 * time.Second)
 	}
 }
 
