@@ -40,9 +40,11 @@ func capture() {
 }
 
 func keepCapturing() {
-	for {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
 		capture()
-		time.Sleep(1 * time.Second)
 	}
 }
 
