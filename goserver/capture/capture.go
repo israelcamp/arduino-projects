@@ -15,20 +15,35 @@ import (
 	"time"
 )
 
-func getNowFormated() string {
+type Paths struct {
+	Date string
+	Time string
+}
+
+func getNowFormated() Paths {
 	now := time.Now()
-	return fmt.Sprintf("%d-%d-%d_%d-%d-%d", now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
+	dateString := fmt.Sprintf("%d%02d%02d", now.Year(), now.Month(), now.Day())
+	timeString := fmt.Sprintf("%02d%02d%02d", now.Hour(), now.Minute(), now.Second())
+	paths := Paths{
+		Date: dateString,
+		Time: timeString,
+	}
+	return paths
 }
 
 func Capture(imagesDir string, mu *sync.RWMutex, frame []byte) {
-	nowString := getNowFormated()
+	nowPaths := getNowFormated()
 
 	mu.RLock()
 	content := frame
 	mu.RUnlock()
 
-	currentImagePath := fmt.Sprintf("%s/%s.png", imagesDir, nowString)
-	out, err := os.Create(currentImagePath)
+	imageDir := fmt.Sprintf("%s/%s", imagesDir, nowPaths.Date)
+	os.MkdirAll(imageDir, os.ModePerm)
+
+	imagePath := fmt.Sprintf("%s/%s.png", imageDir, nowPaths.Time)
+
+	out, err := os.Create(imagePath)
 	if err != nil {
 		panic(err)
 	}

@@ -8,14 +8,13 @@ import (
 	"time"
 )
 
-var currentImagePath string
 var (
 	mu    sync.RWMutex
 	frame []byte
 )
 
 func keepCapturing(cfg config.Config) {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(time.Duration(cfg.Capture.Interval) * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {

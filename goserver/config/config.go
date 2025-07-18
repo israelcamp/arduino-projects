@@ -1,8 +1,9 @@
 package config
 
 import (
-	"gopkg.in/yaml.v3"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
@@ -14,6 +15,9 @@ type Config struct {
 	FileSystem struct {
 		ImagesDir string `yaml:"imagesDir"`
 	} `yaml:"fileSystem"`
+	Capture struct {
+		Interval int `yaml:"interval"`
+	} `yaml:"capture"`
 }
 
 func ReadConfig() Config {

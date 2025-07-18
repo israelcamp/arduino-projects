@@ -4,3 +4,5 @@ esp32cam:
   streamEndpoint: stream
 fileSystem:
   imagesDir: images
+capture:
+  interval: 10
