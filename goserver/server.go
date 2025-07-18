@@ -3,6 +3,7 @@ package main
 import (
 	"archome/server/capture"
 	"archome/server/config"
+	"archome/server/rabbitmq"
 	"net/http"
 	"sync"
 	"time"
@@ -42,8 +43,16 @@ func streamHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-
 	cfg := config.ReadConfig()
+
+	conn := rabbitmq.CreateConnection(cfg)
+	defer conn.Close()
+
+	ch := rabbitmq.OpenChannel(conn)
+	defer ch.Close()
+
+	queue := rabbitmq.OpenQueue(ch)
+	rabbitmq.PlubishToQueue(ch, queue, "Hello")
 
 	go keepCapturing(cfg)
 	go capture.FetchLoop(cfg, &mu, &frame)

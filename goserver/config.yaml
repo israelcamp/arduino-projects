@@ -6,3 +6,10 @@ fileSystem:
   imagesDir: images
 capture:
   interval: 10
+rabbitmq:
+  port: !env_var RPORT 5672
+  user: !env_var RUSER user
+  pass: !env_var RPASS pass
+  host: !env_var RHOST localhost
+  vhost: !env_var RVHOST vhost
+  queue: !env_var RQUEUE images
