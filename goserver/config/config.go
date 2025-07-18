@@ -8,7 +8,8 @@ import (
 type Config struct {
 	Esp32Cam struct {
 		URL             string `yaml:"url"`
-		CaptureEndpoint string `yaml:"capture"`
+		CaptureEndpoint string `yaml:"captureEndpoint"`
+		StreamEndpoint  string `yaml:"streamEndpoint"`
 	} `yaml:"esp32cam"`
 	FileSystem struct {
 		ImagesDir string `yaml:"imagesDir"`
