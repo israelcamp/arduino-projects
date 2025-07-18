@@ -4,6 +4,7 @@ import (
 	"archome/server/capture"
 	"archome/server/config"
 	"archome/server/rabbitmq"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"net/http"
 	"sync"
 	"time"
@@ -14,12 +15,13 @@ var (
 	frame []byte
 )
 
-func keepCapturing(cfg config.Config) {
+func keepCapturing(cfg config.Config, ch *amqp.Channel, q amqp.Queue) {
 	ticker := time.NewTicker(time.Duration(cfg.Capture.Interval) * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {
 		capture.Capture(cfg.FileSystem.ImagesDir, &mu, frame)
+		rabbitmq.PlubishToQueue(ch, q, frame)
 	}
 }
 
@@ -52,9 +54,8 @@ func main() {
 	defer ch.Close()
 
 	queue := rabbitmq.OpenQueue(ch)
-	rabbitmq.PlubishToQueue(ch, queue, "Hello")
 
-	go keepCapturing(cfg)
+	go keepCapturing(cfg, ch, queue)
 	go capture.FetchLoop(cfg, &mu, &frame)
 
 	http.HandleFunc("/stream", streamHandler)

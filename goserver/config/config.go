@@ -1,42 +1,9 @@
 package config
 
 import (
-	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
 )
-
-type EnvVar string
-
-func (e *EnvVar) UnmarshalYAML(node *yaml.Node) error {
-	if node.Tag == "!env_var" {
-		// Expect two child nodes: key and optional default
-		if len(node.Content) < 1 {
-			return fmt.Errorf("!env_var requires at least a key")
-		}
-		key := node.Content[0].Value
-
-		var def string
-		if len(node.Content) >= 2 {
-			def = node.Content[1].Value
-		}
-
-		if val := os.Getenv(key); val != "" {
-			*e = EnvVar(val)
-		} else {
-			*e = EnvVar(def)
-		}
-		return nil
-	}
-
-	// Fallback: decode normally (e.g. plain scalar)
-	var plain string
-	if err := node.Decode(&plain); err != nil {
-		return err
-	}
-	*e = EnvVar(plain)
-	return nil
-}
 
 type Config struct {
 	Esp32Cam struct {
