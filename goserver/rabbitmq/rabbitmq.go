@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"archome/server/config"
 	"archome/server/utils"
+	"context"
 	"fmt"
 	"log"
 
@@ -38,6 +39,6 @@ func OpenQueue(ch *amqp.Channel) amqp.Queue {
 func PlubishToQueue(ch *amqp.Channel, q amqp.Queue, frame []byte) {
 
 	b64 := utils.EncodeB64(frame)
-	err := ch.Publish("", q.Name, false, false, amqp.Publishing{ContentType: "image/jpeg", Body: []byte(b64)})
+	err := ch.Publish("", q.Name, false, false, amqp.Publishing{ContentType: "image/jpeg", Body: []byte(b64), Expiration: "600"})
 	failOnError(err, "Failed to send message to queue")
 }
