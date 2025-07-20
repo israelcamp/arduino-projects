@@ -3,7 +3,6 @@ package rabbitmq
 import (
 	"archome/server/config"
 	"archome/server/utils"
-	"context"
 	"fmt"
 	"log"
 
