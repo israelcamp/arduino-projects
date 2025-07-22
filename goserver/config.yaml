@@ -1,0 +1,16 @@
+esp32cam:
+  url: http://192.168.15.117
+  captureEndpoint: capture
+  streamEndpoint: stream
+fileSystem:
+  imagesDir: images
+capture:
+  interval: 10
+  save: true
+rabbitmq:
+  port:  5672
+  user: user
+  pass: pass
+  host: localhost
+  vhost: vhost
+  queue: images
