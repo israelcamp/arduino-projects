@@ -20,7 +20,9 @@ func keepCapturing(cfg config.Config, ch *amqp.Channel, q amqp.Queue) {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		capture.Capture(cfg.FileSystem.ImagesDir, &mu, frame)
+		if cfg.Capture.Save {
+			capture.Capture(cfg.FileSystem.ImagesDir, &mu, frame)
+		}
 		rabbitmq.PlubishToQueue(ch, q, frame)
 	}
 }

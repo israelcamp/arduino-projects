@@ -15,7 +15,8 @@ type Config struct {
 		ImagesDir string `yaml:"imagesDir"`
 	} `yaml:"fileSystem"`
 	Capture struct {
-		Interval int `yaml:"interval"`
+		Interval int  `yaml:"interval"`
+		Save     bool `yaml:"save"`
 	} `yaml:"capture"`
 	RabbitMQ struct {
 		Port  string `yaml:"port"`
