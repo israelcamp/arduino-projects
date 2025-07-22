@@ -1,9 +1,29 @@
+import cv2 as cv
 import pika
 import srsly
 
+from yolo.yoloclass import ObjectDetection
+
+
+model = ObjectDetection(
+    classes_path="yolo/classes.txt",
+    config_path="yolo/yolov4-tiny.cfg",
+    weights_path="yolo/yolov4-tiny.weights",
+)
+
+
+global_frame = None
+
 
 def callback(channel, method_frame, header_frame, body):
-    pass
+    image_b64 = body.decode()
+    drawn_frame = model.run(image_b64)
+    cv.imshow("frame", drawn_frame)
+    key = cv.waitKey(1)
+    if key == ord("q"):
+        channel.stop_consuming()
+    channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+    return drawn_frame
 
 
 def main():
@@ -24,6 +44,7 @@ def main():
     except KeyboardInterrupt:
         channel.stop_consuming()
 
+    cv.destroyAllWindows()
     connection.close()
 
 
