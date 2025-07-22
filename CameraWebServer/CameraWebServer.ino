@@ -1,9 +1,6 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 
-#include "FS.h" // sd card
-#include "SD_MMC.h" // sd card
-
 //
 // WARNING!!! PSRAM IC required for UXGA resolution and high JPEG quality
 //            Ensure ESP32 Wrover Module or other board with PSRAM is selected
@@ -20,19 +17,6 @@
 
 #include "camera_pins.h"
 #include "secrets.h" // WiFi credentials moved here
-
-// // Configure static IP (adjust to your network’s settings)
-IPAddress local_IP(192, 168, 0, 107);
-IPAddress gateway(192, 168, 1, 1);
-IPAddress subnet(255, 255, 255, 0);
-IPAddress primaryDNS(8, 8, 8, 8);       // Recommended
-IPAddress secondaryDNS(8, 8, 4, 4);     // Optional
-
-// SD variables for pictures
-bool isSDAvailable = false;
-unsigned long previousMillis = 0;
-const unsigned long interval = 60000;            // 1 minute = 60 000 ms
-unsigned int photoCount = 0;                     // simple counter
 
 void startCameraServer();
 void setupLedFlash(int pin);
@@ -69,28 +53,14 @@ void setup() {
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
   config.jpeg_quality = 6;
-  config.fb_count = 3;
-
-  // SD CARD
-  Serial.println("Initializing SD card...");
-  isSDAvailable = SD_MMC.begin("/sdcard", true);
-  if (!isSDAvailable) {
-    Serial.println("SD Card Mount Failed");
-  } else {
-    uint8_t cardType = SD_MMC.cardType();
-    if (cardType == CARD_NONE) {
-      Serial.println("No SD card attached");
-    } else {
-      Serial.println("SD card initialized.");
-    }
-  }
+  config.fb_count = 1;
 
   // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
   //                      for larger pre-allocated frame buffer.
   if (config.pixel_format == PIXFORMAT_JPEG) {
     if (psramFound()) {
       config.jpeg_quality = 10;
-      config.fb_count = 3;
+      config.fb_count = 1;
       config.grab_mode = CAMERA_GRAB_LATEST;
     } else {
       // Limit the frame size when PSRAM is not available
@@ -116,21 +86,7 @@ void setup() {
   setupLedFlash(LED_GPIO_NUM);
 #endif
 
-  // Apply static IP config
-  if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
-    Serial.println("STA Failed to configure");
-  }
-
-  WiFi.begin(ssid, password);
-  WiFi.setSleep(false);
-
-  Serial.print("WiFi connecting");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.println("WiFi connected");
+  connectToStrongestWiFi();
 
   startCameraServer();
 
@@ -141,37 +97,67 @@ void setup() {
 
 void loop() {
   // Do nothing. Everything is done in another task by the web server
-  // takePhoto();
-  delay(1000 * 60 * 5);
+  delay(100000);
 }
 
-void takePhoto() {
-  // 4.1 – check SD availability
-  if (!isSDAvailable) {
-    Serial.println("SD not available, skipping photo");
-    return;
+int connectAndReturnStrength(const char *ssid, const char *password) {
+  WiFi.begin(ssid, password);
+  WiFi.setSleep(false);
+
+  int tries = 0;
+  Serial.printf("Trying to connect to %s", ssid);
+  while (WiFi.status() != WL_CONNECTED && tries < 20) {
+    delay(500);
+    Serial.print(".");
+    tries++;
+  }
+  Serial.println("");
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Could not connect");
+    return -1000;
   }
 
-  camera_fb_t * fb = NULL;
-  fb = esp_camera_fb_get();
-  if(!fb) {
-    Serial.println("Camera capture failed");
-    return;
-  }
+  int strength = WiFi.RSSI();
+  Serial.printf("Connected to %s with strength %d \n", ssid, strength);
+  return strength;
+}
 
-  String path = "/picture.jpg";
-  fs::FS &fs = SD_MMC;
-  Serial.printf("Picture file name: %s\n", path.c_str());
+void configWiFi1() {
+  // Configure static IP (adjust to your network’s settings)
+  IPAddress local_IP(192, 168, 15, 117);
+  IPAddress gateway(192, 168, 1, 1);
+  IPAddress subnet(255, 255, 255, 0);
+  IPAddress primaryDNS(8, 8, 8, 8);       // Recommended
+  IPAddress secondaryDNS(8, 8, 4, 4);     // Optional
 
-  File file = fs.open(path.c_str(), FILE_WRITE);
-  if(!file){
-    Serial.println("Failed to open file in writing mode");
+  // Apply static IP config
+  if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
+    Serial.println("STA Failed to configure");
   }
-  else {
-    file.write(fb->buf, fb->len); // payload (image), payload length
-    Serial.printf("Saved file to path: %s\n", path.c_str());
-  }
-  file.close();
+}
 
-  esp_camera_fb_return(fb);
+void configWiFi2() {
+  // Configure static IP (adjust to your network’s settings)
+  IPAddress local_IP(192, 168, 0, 107);
+  IPAddress gateway(192, 168, 1, 1);
+  IPAddress subnet(255, 255, 255, 0);
+  IPAddress primaryDNS(8, 8, 8, 8);       // Recommended
+  IPAddress secondaryDNS(8, 8, 4, 4);     // Optional
+
+  // Apply static IP config
+  if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
+    Serial.println("STA Failed to configure");
+  }
+}
+
+void connectToStrongestWiFi() {
+  const int wifi1_strength = connectAndReturnStrength(WiFi1_ssid, WiFi1_password);
+  const int wifi2_strength = connectAndReturnStrength(WiFi2_ssid, WiFi2_password);
+  if (wifi1_strength > wifi2_strength) {
+    configWiFi1();
+    connectAndReturnStrength(WiFi1_ssid, WiFi1_password);
+  } else {
+    configWiFi2();
+    connectAndReturnStrength(WiFi2_ssid, WiFi2_password);
+  }
 }
