@@ -18,10 +18,10 @@ global_frame = None
 def callback(channel, method_frame, header_frame, body):
     image_b64 = body.decode()
     drawn_frame = model.run(image_b64)
-    cv.imshow("frame", drawn_frame)
-    key = cv.waitKey(1)
-    if key == ord("q"):
-        channel.stop_consuming()
+    # cv.imshow("frame", drawn_frame)
+    # key = cv.waitKey(1)
+    # if key == ord("q"):
+    #     channel.stop_consuming()
     channel.basic_ack(delivery_tag=method_frame.delivery_tag)
     return drawn_frame
 
@@ -40,11 +40,12 @@ def main():
     channel.basic_consume(config["queue"], callback)
 
     try:
+        print("Starting consuming...")
         channel.start_consuming()
     except KeyboardInterrupt:
         channel.stop_consuming()
 
-    cv.destroyAllWindows()
+    # cv.destroyAllWindows()
     connection.close()
 
 
