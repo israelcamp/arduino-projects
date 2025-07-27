@@ -1,5 +1,4 @@
 import base64
-from pathlib import Path
 import io
 
 from PIL import Image
@@ -55,7 +54,6 @@ class ObjectDetection:
 
     def draw_into_frame(self, frame, output: ODOutput):
         for classid, score, box in zip(output.classes, output.scores, output.boxes):
-            print("CLASS ID", classid)
             color = COLORS[int(classid) % len(COLORS)]
             label = "%s : %f" % (self.classes[classid], score)
             cv.rectangle(frame, box, color, 1)

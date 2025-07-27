@@ -1,6 +1,9 @@
+import traceback
+
 import cv2 as cv
 import pika
 import srsly
+import requests
 
 from yolo.yoloclass import ObjectDetection
 
@@ -48,5 +51,32 @@ def main():
     connection.close()
 
 
+def aistream():
+    config = srsly.read_yaml("config.yaml")["goserver"]
+    base_url = config["base_url"]
+    capture_endpoint = f"{base_url}/{config['capture_endpoint']}"
+    upload_endpoint = f"{base_url}/{config['upload_endpoint']}"
+
+    while True:
+        try:
+            req = requests.get(capture_endpoint)
+            aiframe = model.run(req.text)
+            _, encoded_image = cv.imencode(".jpg", aiframe)
+            resp = requests.post(
+                upload_endpoint,
+                files={"image": ("frame.jpg", encoded_image, "image/jpeg")},
+            )
+            if resp.status_code != 200:
+                raise Exception(f"Error sending image {resp.status_code}: {resp.text}")
+        except KeyboardInterrupt:
+            print("ENDING SERVICE")
+            return
+        except Exception:
+            print("ERROR SENDING AIFRAME")
+            print(traceback.format_exc())
+            continue
+
+
 if __name__ == "__main__":
-    main()
+    # main()
+    aistream()

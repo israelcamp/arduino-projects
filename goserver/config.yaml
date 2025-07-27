@@ -6,11 +6,16 @@ fileSystem:
   imagesDir: images
 capture:
   interval: 10
-  save: true
+  save: false
 rabbitmq:
+  publish: false
   port:  5672
   user: user
   pass: pass
   host: localhost
   vhost: vhost
   queue: images
+goserver:
+  base_url: http://localhost:8090
+  capture_endpoint: capture
+  upload_endpoint: ai
