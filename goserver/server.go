@@ -18,12 +18,12 @@ var (
 	aiframe []byte
 )
 
-func keepCapturing(cfg config.Config) {
+func keepSavingFrame(cfg config.Config) {
 	ticker := time.NewTicker(time.Duration(cfg.Capture.Interval) * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
 		if cfg.Capture.Save {
-			capture.Capture(cfg.FileSystem.ImagesDir, &mu, frame)
+			capture.SaveCapture(cfg.FileSystem.ImagesDir, &mu, frame)
 		}
 	}
 }
@@ -74,13 +74,13 @@ func streamAIHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func serveCapture(w http.ResponseWriter, req *http.Request) {
+func serveFrame(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "image/jpeg")
 	b64 := utils.EncodeB64(frame)
 	w.Write([]byte(b64))
 }
 
-func serveAICapture(w http.ResponseWriter, req *http.Request) {
+func serveAIFrame(w http.ResponseWriter, req *http.Request) {
 	mu.RLock()
 	defer mu.RUnlock()
 	w.Header().Set("Content-Type", "image/jpeg")
@@ -132,12 +132,12 @@ func main() {
 		go keepPublishing(cfg, ch, queue)
 	}
 
-	go keepCapturing(cfg)
-	go capture.FetchLoop(cfg, &mu, &frame)
+	go keepSavingFrame(cfg)
+	go capture.FetchFrameLoop(cfg, &mu, &frame)
 
 	http.HandleFunc("/ai", receiveAIFrame)
-	http.HandleFunc("/capture", serveCapture)
-	http.HandleFunc("/aicapture", serveAICapture)
+	http.HandleFunc("/capture", serveFrame)
+	http.HandleFunc("/aicapture", serveAIFrame)
 	http.HandleFunc("/stream", streamHandler)
 	http.HandleFunc(("/streamai"), streamAIHandler)
 

@@ -31,7 +31,7 @@ func getNowFormated() Paths {
 	return paths
 }
 
-func Capture(imagesDir string, mu *sync.RWMutex, frame []byte) {
+func SaveCapture(imagesDir string, mu *sync.RWMutex, frame []byte) {
 	nowPaths := getNowFormated()
 
 	mu.RLock()
@@ -55,7 +55,7 @@ func Capture(imagesDir string, mu *sync.RWMutex, frame []byte) {
 	}
 	fmt.Println("Image saved")
 }
-func FetchLoop(cfg config.Config, mu *sync.RWMutex, frame *[]byte) {
+func FetchFrameLoop(cfg config.Config, mu *sync.RWMutex, frame *[]byte) {
 	for {
 		resp, err := http.Get(fmt.Sprintf("%s:81/%s", cfg.Esp32Cam.URL, cfg.Esp32Cam.StreamEndpoint))
 		if err != nil {
