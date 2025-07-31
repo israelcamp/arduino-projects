@@ -8,6 +8,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"io"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -84,6 +85,7 @@ func serveAIFrame(w http.ResponseWriter, req *http.Request) {
 	mu.RLock()
 	defer mu.RUnlock()
 	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Content-Length", strconv.Itoa(len(aiframe)))
 	w.Write(aiframe)
 }
 
