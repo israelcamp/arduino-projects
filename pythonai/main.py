@@ -1,4 +1,5 @@
 import traceback
+import time
 
 import cv2 as cv
 import pika
@@ -53,10 +54,14 @@ def main():
 
 
 def aistream():
-    config = srsly.read_yaml("config.yaml")["goserver"]
-    base_url = config["base_url"]
-    capture_endpoint = f"{base_url}/{config['capture_endpoint']}"
-    upload_endpoint = f"{base_url}/{config['upload_endpoint']}"
+    config = srsly.read_yaml("config.yaml")
+    go_config = config["goserver"]
+
+    base_url = go_config["base_url"]
+    capture_endpoint = f"{base_url}/{go_config['capture_endpoint']}"
+    upload_endpoint = f"{base_url}/{go_config['upload_endpoint']}"
+
+    delay = int(config["ai"]["interval"])
 
     while True:
         try:
@@ -69,15 +74,16 @@ def aistream():
             )
             if resp.status_code != 200:
                 raise Exception(f"Error sending image {resp.status_code}: {resp.text}")
+            time.sleep(delay)
         except KeyboardInterrupt:
             print("ENDING SERVICE")
             return
         except Exception:
             print("ERROR SENDING AIFRAME")
             print(traceback.format_exc())
+            time.sleep(60)
             continue
 
 
 if __name__ == "__main__":
-    # main()
     aistream()

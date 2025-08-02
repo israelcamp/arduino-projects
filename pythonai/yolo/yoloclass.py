@@ -66,6 +66,7 @@ class ObjectDetection:
                 color,
                 1,
             )
+        frame = cv.resize(frame, (240,240), interpolation=cv.INTER_LINEAR)
         return frame
 
     def run(self, image_b64: str):
