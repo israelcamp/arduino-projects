@@ -3,9 +3,7 @@ package main
 import (
 	"archome/server/capture"
 	"archome/server/config"
-	"archome/server/rabbitmq"
 	"archome/server/utils"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"io"
 	"net/http"
 	"strconv"
@@ -26,14 +24,6 @@ func keepSavingFrame(cfg config.Config) {
 		if cfg.Capture.Save {
 			capture.SaveCapture(cfg.FileSystem.ImagesDir, &mu, frame)
 		}
-	}
-}
-
-func keepPublishing(cfg config.Config, ch *amqp.Channel, q amqp.Queue) {
-	ticker := time.NewTicker(time.Duration(cfg.Capture.Interval) * time.Second)
-	defer ticker.Stop()
-	for range ticker.C {
-		rabbitmq.PlubishToQueue(ch, q, frame)
 	}
 }
 
@@ -121,18 +111,6 @@ func receiveAIFrame(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	cfg := config.ReadConfig()
-
-	if cfg.RabbitMQ.Publish {
-		conn := rabbitmq.CreateConnection(cfg)
-		defer conn.Close()
-
-		ch := rabbitmq.OpenChannel(conn)
-		defer ch.Close()
-
-		queue := rabbitmq.OpenQueue(ch)
-
-		go keepPublishing(cfg, ch, queue)
-	}
 
 	go keepSavingFrame(cfg)
 	go capture.FetchFrameLoop(cfg, &mu, &frame)
