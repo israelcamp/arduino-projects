@@ -9,3 +9,5 @@
 #define TFT_DC        26
 #define TFT_CS       -1   // CS sempre ativo (interno ao GND)
 #define TFT_BL       32   // Backlight em 3.3V
+
+#define SMOOTH_FONT

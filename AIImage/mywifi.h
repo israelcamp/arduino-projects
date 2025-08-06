@@ -25,8 +25,8 @@ int connectAndReturnStrength(const char *ssid, const char *password) {
 
 void connectToStrongestWiFi() {
   const int wifi1_strength = connectAndReturnStrength(WiFi1_ssid, WiFi1_password);
-  const int wifi2_strength = connectAndReturnStrength(WiFi2_ssid, WiFi2_password);
-  if (wifi1_strength > wifi2_strength) {
-    connectAndReturnStrength(WiFi1_ssid, WiFi1_password);
-  }
+  // const int wifi2_strength = connectAndReturnStrength(WiFi2_ssid, WiFi2_password);
+  // if (wifi1_strength > wifi2_strength) {
+  //   connectAndReturnStrength(WiFi1_ssid, WiFi1_password);
+  // }
 }
