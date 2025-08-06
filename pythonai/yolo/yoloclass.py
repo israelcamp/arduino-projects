@@ -1,9 +1,9 @@
 import base64
 import io
 
-from PIL import Image
-import numpy as np
 import cv2 as cv
+import numpy as np
+from PIL import Image
 
 Conf_threshold = 0.4
 NMS_threshold = 0.4
@@ -66,11 +66,12 @@ class ObjectDetection:
                 color,
                 1,
             )
-        frame = cv.resize(frame, (240,240), interpolation=cv.INTER_LINEAR)
+        frame = cv.resize(frame, (240, 240), interpolation=cv.INTER_LINEAR)
         return frame
 
     def run(self, image_b64: str):
         frame = self.b64_to_image(image_b64)
         out = self.detect(frame)
         drawn_frame = self.draw_into_frame(frame, out)
-        return drawn_frame
+        hasPerson = 0 in out.classes
+        return drawn_frame, hasPerson

@@ -12,9 +12,10 @@ import (
 )
 
 var (
-	mu      sync.RWMutex
-	frame   []byte
-	aiframe []byte
+	mu               sync.RWMutex
+	frame            []byte
+	aiframe          []byte
+	aiframeHasPerson string // yes or no
 )
 
 func keepSavingFrame(cfg config.Config) {
@@ -76,6 +77,7 @@ func serveAIFrame(w http.ResponseWriter, req *http.Request) {
 	defer mu.RUnlock()
 	w.Header().Set("Content-Type", "image/jpeg")
 	w.Header().Set("Content-Length", strconv.Itoa(len(aiframe)))
+	w.Header().Set("HasPerson", aiframeHasPerson)
 	w.Write(aiframe)
 }
 
@@ -93,6 +95,8 @@ func receiveAIFrame(w http.ResponseWriter, req *http.Request) {
 	}
 	defer file.Close()
 
+	hasPerson := req.Header.Get("HasPerson")
+
 	// 3) read all bytes
 	data, err := io.ReadAll(file)
 	if err != nil {
@@ -103,6 +107,7 @@ func receiveAIFrame(w http.ResponseWriter, req *http.Request) {
 	// 4) store in global (with locking)
 	mu.Lock()
 	aiframe = data
+	aiframeHasPerson = hasPerson
 	mu.Unlock()
 
 	// 5) respond OK

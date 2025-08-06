@@ -12,4 +12,4 @@ goserver:
   capture_endpoint: capture
   upload_endpoint: ai
 ai:
-  interval: 1
+  interval: 0.25

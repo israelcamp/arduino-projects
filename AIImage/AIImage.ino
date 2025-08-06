@@ -15,6 +15,10 @@
 TFT_eSPI tft = TFT_eSPI();
 
 const int16_t fontHeight = 36;
+const int noPersonLedPin = 33;
+const int yesPersonLedPin = 12;
+const char* headers[] = {"HasPerson"};
+String hasPerson = "no";
 
 bool tftOutput(int16_t x,int16_t y,uint16_t w,uint16_t h,uint16_t *bmp){
   if (y >= tft.height()) return 0;
@@ -29,16 +33,18 @@ void setup(){
   tft.setTextColor(0xFFFF, 0x0000);
   tft.fillScreen(TFT_BLACK);
 
-  // The jpeg image can be scaled by a factor of 1, 2, 4, or 8
   TJpgDec.setJpgScale(1);
-  // The byte order can be swapped (set true for TFT_eSPI)
   TJpgDec.setSwapBytes(true);
-  // The decoder must be given the exact name of the rendering function above
   TJpgDec.setCallback(tftOutput);   
 
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
-
   tft.loadFont(AA_FONT_LARGE);
+
+  pinMode(TFT_BL, OUTPUT);
+  pinMode(noPersonLedPin, OUTPUT);
+  pinMode(yesPersonLedPin, OUTPUT);
+
+  digitalWrite(TFT_BL, HIGH);
   
   // HELLO
   const char* helloText = "HELLO!";
@@ -71,7 +77,9 @@ void setup(){
 
 void loop(){
   HTTPClient http;
-  http.begin("http://192.168.15.12:8090/aicapture");
+  http.begin(serverUrl);
+  http.collectHeaders(headers, 1);
+
   if (http.GET()==HTTP_CODE_OK){
     int len = http.getSize();
     auto *buf = (uint8_t*) heap_caps_malloc(len, MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT);
@@ -82,10 +90,24 @@ void loop(){
     TJpgDec.drawJpg(0, 0, buf, len);
 
     free(buf);
+
+    hasPerson = http.header("HasPerson");
+
+  } else {
+    tft.fillScreen(TFT_BLACK);
   }
   http.end();
 
+  if (hasPerson == "yes") {
+    digitalWrite(yesPersonLedPin, HIGH);
+    digitalWrite(noPersonLedPin, LOW);
+  } else {
+    digitalWrite(yesPersonLedPin, LOW);
+    digitalWrite(noPersonLedPin, HIGH);
+  }
+
   // Wait before drawing again
-  delay(2000);
+  delay(250);
+
 }
 

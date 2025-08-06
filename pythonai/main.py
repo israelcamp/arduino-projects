@@ -1,12 +1,11 @@
-import traceback
 import time
+import traceback
 
 import cv2 as cv
-import srsly
 import requests
+import srsly
 
 from yolo.yoloclass import ObjectDetection
-
 
 model = ObjectDetection(
     classes_path="yolo/classes.txt",
@@ -28,10 +27,11 @@ def aistream():
     while True:
         try:
             req = requests.get(capture_endpoint)
-            aiframe = model.run(req.text)
+            aiframe, hasPerson = model.run(req.text)
             _, encoded_image = cv.imencode(".jpg", aiframe)
             resp = requests.post(
                 upload_endpoint,
+                headers={"HasPerson": "yes" if hasPerson else "no"},
                 files={"image": ("frame.jpg", encoded_image, "image/jpeg")},
             )
             if resp.status_code != 200:
