@@ -92,6 +92,7 @@ func FetchFrameLoop(cfg config.Config, mu *sync.RWMutex, frame *[]byte) {
 			mu.Lock()
 			*frame = buf.Bytes()
 			mu.Unlock()
+			time.Sleep(150 * time.Millisecond)
 		}
 		resp.Body.Close()
 	}
