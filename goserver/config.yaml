@@ -1,6 +1,6 @@
 esp32cam:
   url: http://192.168.15.117
-  captureEndpoint: capture
+  captureEndpoint: b64capture
   streamEndpoint: stream
 fileSystem:
   imagesDir: images

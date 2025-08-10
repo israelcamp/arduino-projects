@@ -67,6 +67,16 @@ func streamAIHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func serveFrame(w http.ResponseWriter, req *http.Request) {
+	mu.RLock()
+	defer mu.RUnlock()
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Content-Length", strconv.Itoa(len(frame)))
+	w.Write(frame)
+}
+
+func serveB64Frame(w http.ResponseWriter, req *http.Request) {
+	mu.RLock()
+	defer mu.RUnlock()
 	w.Header().Set("Content-Type", "image/jpeg")
 	b64 := utils.EncodeB64(frame)
 	w.Write([]byte(b64))
@@ -122,6 +132,7 @@ func main() {
 
 	http.HandleFunc("/ai", receiveAIFrame)
 	http.HandleFunc("/capture", serveFrame)
+	http.HandleFunc("/b64capture", serveB64Frame)
 	http.HandleFunc("/aicapture", serveAIFrame)
 	http.HandleFunc("/stream", streamHandler)
 	http.HandleFunc(("/streamai"), streamAIHandler)
