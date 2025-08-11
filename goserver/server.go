@@ -22,7 +22,8 @@ func keepSavingFrame(cfg config.Config) {
 	ticker := time.NewTicker(time.Duration(cfg.Capture.Interval) * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
-		if cfg.Capture.Save {
+		shouldSave := cfg.Capture.Save && cfg.Capture.SaveOnPerson && aiframeHasPerson == "yes"
+		if shouldSave {
 			capture.SaveCapture(cfg.FileSystem.ImagesDir, &mu, frame)
 		}
 	}

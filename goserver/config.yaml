@@ -1,15 +1,16 @@
 esp32cam:
   url: http://192.168.15.117
-  captureEndpoint: b64capture
+  captureEndpoint: capture
   streamEndpoint: stream
 fileSystem:
   imagesDir: images
 capture:
-  interval: 10
+  interval: 1
   save: false
+  saveOnPerson: false
 goserver:
   base_url: http://localhost:8090
-  capture_endpoint: capture
+  capture_endpoint: b64capture
   upload_endpoint: ai
 ai:
   interval: 0.25
