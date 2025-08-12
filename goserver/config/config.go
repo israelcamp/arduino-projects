@@ -15,8 +15,9 @@ type Config struct {
 		ImagesDir string `yaml:"imagesDir"`
 	} `yaml:"fileSystem"`
 	Capture struct {
-		Interval int  `yaml:"interval"`
-		Save     bool `yaml:"save"`
+		Interval     int  `yaml:"interval"`
+		Save         bool `yaml:"save"`
+		SaveOnPerson bool `yaml:"saveOnPerson"`
 	} `yaml:"capture"`
 }
 

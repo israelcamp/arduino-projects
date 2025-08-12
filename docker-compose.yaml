@@ -2,3 +2,10 @@
 version: "3.8"
 
 services:
+  goserver:
+    image: goserver
+    ports:
+      - 8090:8090
+    command: ./server
+    volumes:
+      - ./goserver/config.yaml:/app/config.yaml

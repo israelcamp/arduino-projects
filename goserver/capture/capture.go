@@ -55,6 +55,7 @@ func SaveCapture(imagesDir string, mu *sync.RWMutex, frame []byte) {
 	}
 	fmt.Println("Image saved")
 }
+
 func FetchFrameLoop(cfg config.Config, mu *sync.RWMutex, frame *[]byte) {
 	for {
 		resp, err := http.Get(fmt.Sprintf("%s:81/%s", cfg.Esp32Cam.URL, cfg.Esp32Cam.StreamEndpoint))
