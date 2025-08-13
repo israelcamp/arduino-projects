@@ -9,3 +9,11 @@ services:
     command: ./server
     volumes:
       - ./goserver/config.yaml:/app/config.yaml
+  pythonai:
+    image: pythonai
+    command: uv run ./main.py
+    volumes:
+      - ./pythonai/yolo/:/app/yolo
+      - ./goserver/config.yaml:/app/config.yaml
+    depends_on:
+      - goserver

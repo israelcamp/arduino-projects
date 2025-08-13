@@ -9,7 +9,7 @@ capture:
   save: false
   saveOnPerson: false
 goserver:
-  base_url: http://localhost:8090
+  base_url: http://goserver:8090
   capture_endpoint: b64capture
   upload_endpoint: ai
 ai:
