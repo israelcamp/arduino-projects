@@ -15,18 +15,10 @@ type Config struct {
 		ImagesDir string `yaml:"imagesDir"`
 	} `yaml:"fileSystem"`
 	Capture struct {
-		Interval int  `yaml:"interval"`
-		Save     bool `yaml:"save"`
+		Interval     int  `yaml:"interval"`
+		Save         bool `yaml:"save"`
+		SaveOnPerson bool `yaml:"saveOnPerson"`
 	} `yaml:"capture"`
-	RabbitMQ struct {
-		Publish bool   `yaml:"publish"`
-		Port    string `yaml:"port"`
-		User    string `yaml:"user"`
-		Pass    string `yaml:"pass"`
-		Host    string `yaml:"host"`
-		VHost   string `yaml:"vhost"`
-		Queue   string `yaml:"queue"`
-	} `yaml:"rabbitmq"`
 }
 
 func ReadConfig() Config {

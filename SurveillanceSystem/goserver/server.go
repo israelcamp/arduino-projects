@@ -3,36 +3,30 @@ package main
 import (
 	"archome/server/capture"
 	"archome/server/config"
-	"archome/server/rabbitmq"
 	"archome/server/utils"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"io"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 )
 
 var (
-	mu      sync.RWMutex
-	frame   []byte
-	aiframe []byte
+	mu               sync.RWMutex
+	frame            []byte
+	aiframe          []byte
+	aiframeHasPerson string // yes or no
 )
 
-func keepCapturing(cfg config.Config) {
+func keepSavingFrame(cfg config.Config) {
 	ticker := time.NewTicker(time.Duration(cfg.Capture.Interval) * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
-		if cfg.Capture.Save {
-			capture.Capture(cfg.FileSystem.ImagesDir, &mu, frame)
+		shouldSave := cfg.Capture.Save && cfg.Capture.SaveOnPerson
+		shouldSave = shouldSave && aiframeHasPerson == "yes"
+		if shouldSave {
+			capture.SaveCapture(cfg.FileSystem.ImagesDir, &mu, frame)
 		}
-	}
-}
-
-func keepPublishing(cfg config.Config, ch *amqp.Channel, q amqp.Queue) {
-	ticker := time.NewTicker(time.Duration(cfg.Capture.Interval) * time.Second)
-	defer ticker.Stop()
-	for range ticker.C {
-		rabbitmq.PlubishToQueue(ch, q, frame)
 	}
 }
 
@@ -74,16 +68,28 @@ func streamAIHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func serveCapture(w http.ResponseWriter, req *http.Request) {
+func serveFrame(w http.ResponseWriter, req *http.Request) {
+	mu.RLock()
+	defer mu.RUnlock()
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Content-Length", strconv.Itoa(len(frame)))
+	w.Write(frame)
+}
+
+func serveB64Frame(w http.ResponseWriter, req *http.Request) {
+	mu.RLock()
+	defer mu.RUnlock()
 	w.Header().Set("Content-Type", "image/jpeg")
 	b64 := utils.EncodeB64(frame)
 	w.Write([]byte(b64))
 }
 
-func serveAICapture(w http.ResponseWriter, req *http.Request) {
+func serveAIFrame(w http.ResponseWriter, req *http.Request) {
 	mu.RLock()
 	defer mu.RUnlock()
 	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Content-Length", strconv.Itoa(len(aiframe)))
+	w.Header().Set("HasPerson", aiframeHasPerson)
 	w.Write(aiframe)
 }
 
@@ -101,6 +107,8 @@ func receiveAIFrame(w http.ResponseWriter, req *http.Request) {
 	}
 	defer file.Close()
 
+	hasPerson := req.Header.Get("HasPerson")
+
 	// 3) read all bytes
 	data, err := io.ReadAll(file)
 	if err != nil {
@@ -111,6 +119,7 @@ func receiveAIFrame(w http.ResponseWriter, req *http.Request) {
 	// 4) store in global (with locking)
 	mu.Lock()
 	aiframe = data
+	aiframeHasPerson = hasPerson
 	mu.Unlock()
 
 	// 5) respond OK
@@ -120,24 +129,13 @@ func receiveAIFrame(w http.ResponseWriter, req *http.Request) {
 func main() {
 	cfg := config.ReadConfig()
 
-	if cfg.RabbitMQ.Publish {
-		conn := rabbitmq.CreateConnection(cfg)
-		defer conn.Close()
-
-		ch := rabbitmq.OpenChannel(conn)
-		defer ch.Close()
-
-		queue := rabbitmq.OpenQueue(ch)
-
-		go keepPublishing(cfg, ch, queue)
-	}
-
-	go keepCapturing(cfg)
-	go capture.FetchLoop(cfg, &mu, &frame)
+	go keepSavingFrame(cfg)
+	go capture.FetchFrameLoop(cfg, &mu, &frame)
 
 	http.HandleFunc("/ai", receiveAIFrame)
-	http.HandleFunc("/capture", serveCapture)
-	http.HandleFunc("/aicapture", serveAICapture)
+	http.HandleFunc("/capture", serveFrame)
+	http.HandleFunc("/b64capture", serveB64Frame)
+	http.HandleFunc("/aicapture", serveAIFrame)
 	http.HandleFunc("/stream", streamHandler)
 	http.HandleFunc(("/streamai"), streamAIHandler)
 
