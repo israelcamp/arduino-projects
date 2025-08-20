@@ -71,9 +71,11 @@ func streamAIHandler(w http.ResponseWriter, req *http.Request) {
 func serveFrame(w http.ResponseWriter, req *http.Request) {
 	mu.RLock()
 	defer mu.RUnlock()
+	resizedFrame, _ := capture.ResizeImageBytes(frame, 240, 240, 90)
+
 	w.Header().Set("Content-Type", "image/jpeg")
-	w.Header().Set("Content-Length", strconv.Itoa(len(frame)))
-	w.Write(frame)
+	w.Header().Set("Content-Length", strconv.Itoa(len(resizedFrame)))
+	w.Write(resizedFrame)
 }
 
 func serveB64Frame(w http.ResponseWriter, req *http.Request) {
@@ -132,7 +134,7 @@ func main() {
 	go keepSavingFrame(cfg)
 	go capture.FetchFrameLoop(cfg, &mu, &frame)
 
-	http.HandleFunc("/ai", receiveAIFrame)
+	http.HandleFunc("/aiupload", receiveAIFrame)
 	http.HandleFunc("/capture", serveFrame)
 	http.HandleFunc("/b64capture", serveB64Frame)
 	http.HandleFunc("/aicapture", serveAIFrame)

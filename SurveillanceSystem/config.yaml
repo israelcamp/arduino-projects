@@ -11,6 +11,6 @@ capture:
 goserver:
   base_url: http://goserver:8090
   capture_endpoint: b64capture
-  upload_endpoint: ai
+  upload_endpoint: aiupload
 ai:
   interval: 0.25
