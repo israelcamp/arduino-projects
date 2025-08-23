@@ -71,7 +71,22 @@ func streamAIHandler(w http.ResponseWriter, req *http.Request) {
 func serveFrame(w http.ResponseWriter, req *http.Request) {
 	mu.RLock()
 	defer mu.RUnlock()
-	resizedFrame, _ := capture.ResizeImageBytes(frame, 240, 240, 90)
+
+	height := req.Header.Get("Image-Height")
+	width := req.Header.Get("Image-Width")
+
+	if height == "" {
+		height = "240"
+	}
+
+	if width == "" {
+		width = "240"
+	}
+
+	newHeight, _ := strconv.Atoi(height)
+	newWidth, _ := strconv.Atoi(width)
+
+	resizedFrame, _ := capture.ResizeImageBytes(frame, newWidth, newHeight, 90)
 
 	w.Header().Set("Content-Type", "image/jpeg")
 	w.Header().Set("Content-Length", strconv.Itoa(len(resizedFrame)))
