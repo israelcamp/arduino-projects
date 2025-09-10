@@ -5,6 +5,13 @@ import (
 	"os"
 )
 
+func envOr(key, def string) string {
+	if v, ok := os.LookupEnv(key); ok { // set (could be "")
+		return v
+	}
+	return def
+}
+
 type Config struct {
 	Esp32Cam struct {
 		URL             string `yaml:"url"`
@@ -22,7 +29,8 @@ type Config struct {
 }
 
 func ReadConfig() Config {
-	data, err := os.ReadFile("config.yaml")
+	configPath := envOr("GS_CONFIG", "config.yaml")
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		panic(err)
 	}
