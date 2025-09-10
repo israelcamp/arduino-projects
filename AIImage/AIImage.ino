@@ -4,6 +4,7 @@
 #include <TJpg_Decoder.h>
 #include <SPI.h>
 #include <TFT_eSPI.h>
+#include <ESPmDNS.h>
 
 #include "NotoSansBold15.h"
 #include "NotoSansBold36.h"
@@ -13,6 +14,7 @@
 #define AA_FONT_LARGE NotoSansBold36
 
 TFT_eSPI tft = TFT_eSPI();
+String url;
 
 const int16_t fontHeight = 36;
 
@@ -59,6 +61,32 @@ void setup(){
   delay(2000);
 
   connectToStrongestWiFi();
+  if (!MDNS.begin("esp32")) {
+    Serial.println("Erro ao iniciar mDNS");
+  } else {
+    Serial.println("mDNS iniciado");
+  }
+
+  
+  IPAddress ip;
+  const unsigned long TMO = 6000;
+  unsigned long t0 = millis();
+  do {
+    ip = MDNS.queryHost("raspi");        // tente sem .local
+    if (ip.toString() == "0.0.0.0")
+      ip = MDNS.queryHost(String("raspi") + ".local");  // tente com .local
+    if (ip.toString() == "0.0.0.0") { delay(200); }
+  } while (ip.toString() == "0.0.0.0" && millis() - t0 < TMO);
+
+  if (ip.toString() == "0.0.0.0") {
+    Serial.println("Falha ao resolver mDNS");
+    return;
+  }
+  Serial.print("IP do Raspberry: "); Serial.println(ip);
+
+  url = "http://" + ip.toString() + ":8090/capture";
+  Serial.print("URL formada: ");
+  Serial.println(url);
 
   tft.fillScreen(TFT_BLACK);
   const char* ready = "ENJOY!!";
@@ -71,7 +99,7 @@ void setup(){
 
 void loop(){
   HTTPClient http;
-  http.begin(serverUrl);
+  http.begin(url);
 
   if (http.GET()==HTTP_CODE_OK){
     int len = http.getSize();
