@@ -89,11 +89,12 @@ void setup() {
 
   connectToStrongestWiFi();
 
-  startCameraServer();
-
   Serial.print("Camera Ready! Use 'http://");
   Serial.print(WiFi.localIP());
   Serial.println("' to connect");
+
+  startCameraServer();
+
 }
 
 void loop() {

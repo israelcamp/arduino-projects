@@ -25,7 +25,7 @@ int connectAndReturnStrength(const char *ssid, const char *password) {
 
 void configWiFi1() {
   // Configure static IP (adjust to your network’s settings)
-  IPAddress local_IP(192, 168, 15, 117);
+  IPAddress local_IP(192, 168, 15, 116);
   IPAddress gateway(192, 168, 1, 1);
   IPAddress subnet(255, 255, 255, 0);
   IPAddress primaryDNS(8, 8, 8, 8);       // Recommended
@@ -52,12 +52,14 @@ void configWiFi2() {
 }
 
 void connectToStrongestWiFi() {
+
   const int wifi1_strength = connectAndReturnStrength(WiFi1_ssid, WiFi1_password);
   const int wifi2_strength = connectAndReturnStrength(WiFi2_ssid, WiFi2_password);
   if (wifi1_strength > wifi2_strength) {
     configWiFi1();
     connectAndReturnStrength(WiFi1_ssid, WiFi1_password);
-  } else {
+  } 
+  else {
     configWiFi2();
     connectAndReturnStrength(WiFi2_ssid, WiFi2_password);
   }
