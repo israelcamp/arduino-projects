@@ -22,7 +22,18 @@ func keepSavingFrame(cfg config.Config) {
 	ticker := time.NewTicker(time.Duration(cfg.Capture.Interval) * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
-		shouldSave := cfg.Capture.Save && cfg.Capture.SaveOnPerson
+		shouldSave := cfg.Capture.Save
+		if shouldSave {
+			capture.SaveCapture(cfg.FileSystem.ImagesDir, &mu, frame)
+		}
+	}
+}
+
+func keepSavingAIFrame(cfg config.Config) {
+	ticker := time.NewTicker(time.Duration(cfg.Capture.Interval) * time.Second)
+	defer ticker.Stop()
+	for range ticker.C {
+		shouldSave := cfg.Capture.SaveAI && cfg.Capture.SaveOnPerson
 		shouldSave = shouldSave && aiframeHasPerson == "yes"
 		if shouldSave {
 			capture.SaveCapture(cfg.FileSystem.ImagesDir, &mu, frame)
@@ -147,6 +158,7 @@ func main() {
 	cfg := config.ReadConfig()
 
 	go keepSavingFrame(cfg)
+	go keepSavingAIFrame(cfg)
 	go capture.FetchFrameLoop(cfg, &mu, &frame)
 
 	http.HandleFunc("/aiupload", receiveAIFrame)

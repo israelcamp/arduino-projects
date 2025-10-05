@@ -5,8 +5,9 @@ esp32cam:
 fileSystem:
   imagesDir: images
 capture:
-  interval: 1
+  interval: 5
   save: false
+  saveAI: false
   saveOnPerson: false
 goserver:
   base_url: http://goserver:8090

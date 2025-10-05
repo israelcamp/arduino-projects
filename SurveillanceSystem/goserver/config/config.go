@@ -24,6 +24,7 @@ type Config struct {
 	Capture struct {
 		Interval     int  `yaml:"interval"`
 		Save         bool `yaml:"save"`
+		SaveAI       bool `yaml:"saveAI"`
 		SaveOnPerson bool `yaml:"saveOnPerson"`
 	} `yaml:"capture"`
 }
