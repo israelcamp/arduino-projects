@@ -1,13 +1,5 @@
 #include "esp_camera.h"
-
-//
-// WARNING!!! PSRAM IC required for UXGA resolution and high JPEG quality
-//            Ensure ESP32 Wrover Module or other board with PSRAM is selected
-//            Partial images will be transmitted if image exceeds buffer size
-//
-//            You must select partition scheme from the board menu that has at least 3MB APP space.
-//            Face Recognition is DISABLED for ESP32 and ESP32-S2, because it takes up from 15
-//            seconds to process single frame. Face Detection is ENABLED if PSRAM is enabled as well
+#include <WiFi.h> // Ensure standard WiFi library is available for status checks
 
 // ===================
 // Select camera model
@@ -50,39 +42,33 @@ void setup() {
   config.xclk_freq_hz = 20000000;
   config.frame_size = FRAMESIZE_VGA;
   config.pixel_format = PIXFORMAT_JPEG;  // for streaming
-  //config.pixel_format = PIXFORMAT_RGB565; // for face detection/recognition
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
-  config.jpeg_quality = 6;
+  config.jpeg_quality = 12; // Adjusted default for better stability
   config.fb_count = 1;
 
-  // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
-  //                      for larger pre-allocated frame buffer.
+  // PSRAM check and config
   if (config.pixel_format == PIXFORMAT_JPEG) {
     if (psramFound()) {
       config.jpeg_quality = 10;
-      config.fb_count = 1;
+      config.fb_count = 2; // Better buffering if PSRAM is found
       config.grab_mode = CAMERA_GRAB_LATEST;
     } else {
-      // Limit the frame size when PSRAM is not available
       config.frame_size = FRAMESIZE_SVGA;
       config.fb_location = CAMERA_FB_IN_DRAM;
     }
   } else {
-    // Best option for face detection/recognition
     config.frame_size = FRAMESIZE_240X240;
   }
 
-  // camera init
+  // Camera init
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
     Serial.printf("Camera init failed with error 0x%x", err);
     return;
   }
 
-  sensor_t *s = esp_camera_sensor_get();
-
-// Setup LED FLash if LED pin is defined in camera_pins.h
+// Setup LED Flash
 #if defined(LED_GPIO_NUM)
   setupLedFlash(LED_GPIO_NUM);
 #endif
@@ -94,12 +80,28 @@ void setup() {
   Serial.println("' to connect");
 
   startCameraServer();
-
 }
 
 void loop() {
-  // Do nothing. Everything is done in another task by the web server
-  delay(100000);
+
+  // Check WiFi Status
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi connection lost. Reconnecting...");
+    
+    // Try to disconnect first to ensure clean state
+    WiFi.disconnect(); 
+    
+    // Call your custom function or standard reconnect
+    connectToStrongestWiFi(); 
+  } else {
+    Serial.print("WiFi Status Check: OK. IP: ");
+    Serial.println(WiFi.localIP());
+    
+    // Optional: Print RSSI (Signal Strength) to monitor connection quality
+    Serial.print("Signal Strength (RSSI): ");
+    Serial.println(WiFi.RSSI());
+  }
+  
+  // Small delay to prevent CPU hogging on the loop task
+  delay(1000 * 60 * 20);
 }
-
-
